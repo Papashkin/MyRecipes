@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">MyRecipes</string>
+    <string name="my_recipes_text">My recipes:</string>
+    <string name="text_recipe_for_deleted">Select the recipe:</string>
+    <string name="copy_the_link">Copy the link</string>
+    <string name="share">Share</string>
+    <string name="exit">Exit</string>
+    <string name="new_recipe">New recipe:</string>
+</resources>
