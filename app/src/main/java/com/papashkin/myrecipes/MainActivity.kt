@@ -1,11 +1,12 @@
 package com.papashkin.myrecipes
 
-import android.app.Dialog
+//import android.app.Dialog
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import android.widget.*
 
 @Suppress("DEPRECATION")
@@ -14,27 +15,36 @@ class MainActivity : AppCompatActivity() {
     private lateinit var ids: ArrayList<Long>
     private lateinit var mContext: Context
     private lateinit var stackAdapter: ArrayAdapter<String>
-    private lateinit var svRecipes: StackView
+    private lateinit var scrollRecipe: ListView
+
     private lateinit var btnADD: ImageButton
     private lateinit var btnDEL: ImageButton
     private lateinit var db: RecipeDatabase
+    private lateinit var fromClipboard: CharSequence
 
+    private var selectedRecipeId = -1
     private var namesAndIds: Map<Long, String>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         mContext = applicationContext
+        fromClipboard = getFromClipboard()
 
         btnADD = findViewById(R.id.btn_plus)
+        btnADD.visibility = if(fromClipboard != "") {
+            View.VISIBLE
+        } else View.INVISIBLE
         btnADD.setOnClickListener { addNewRecipe()
         }
 
         btnDEL = findViewById(R.id.btn_minus)
-        btnDEL.setOnClickListener { deleteRecipe()
+        btnDEL.setOnClickListener {
+            deleteRecipe(selectedRecipeId)
         }
+        btnDEL.visibility = View.INVISIBLE
 
-        svRecipes = findViewById(R.id.stackview_resipes)
+        scrollRecipe = findViewById(R.id.list_recipes)
         recipes = arrayListOf()
         ids = arrayListOf()
 
@@ -48,40 +58,42 @@ class MainActivity : AppCompatActivity() {
                 ids.add(it.key)
                 recipes.add(it.value)
             }
-        } else {
-            recipes = arrayListOf()
-            ids = arrayListOf()
         }
-        
+
         stackAdapter = ArrayAdapter(mContext, R.layout.text_resipes, recipes)
-        svRecipes.adapter = stackAdapter
-        svRecipes.setOnItemClickListener { _, _, position, _ ->
-            seeInBrowser(ids[position])
+        scrollRecipe.adapter = stackAdapter
+        scrollRecipe.isLongClickable = true
+
+        scrollRecipe.setOnItemLongClickListener { _, view, position, _ ->
+            if (btnDEL.visibility == View.INVISIBLE){
+                selectedRecipeId = ids[position].toInt()
+                view.alpha = 0.5f
+                isInLongClick(false)
+            }
+            true
+        }
+
+        scrollRecipe.setOnItemClickListener { _, view, position, _ ->
+            if (btnDEL.visibility == View.INVISIBLE) {
+                seeInBrowser(ids[position])
+            } else {
+                if (view.alpha == 0.5f){
+                    view.alpha = 1f
+                    isInLongClick(true)
+                }
+            }
         }
     }
 
-    private fun deleteRecipe() {
-        val dialog = Dialog(this@MainActivity)
-        dialog.setContentView(R.layout.dialog_deleterecipe)
-        dialog.setTitle("Select the recipe")
-
-        val btnOK = dialog.findViewById<ImageButton>(R.id.btn_done)
-        val recipeList = dialog.findViewById<Spinner>(R.id.spinner_recipes)
-        val list = ArrayAdapter(mContext,
-                R.layout.text_recipes_for_delete, recipes)
-        recipeList.adapter = list
-
-        btnOK.setOnClickListener {
-            val selectedRecipe = recipeList.selectedItem.toString()
-            val selectedID = ids[recipes.indexOf(selectedRecipe)]
-            deleteFromDB(selectedID)
-            recipes.remove(selectedRecipe)
-            ids.remove(selectedID)
-            recipeList.adapter = list
-            svRecipes.adapter = stackAdapter
-            (Toast.makeText(mContext, "Selected recipe was deleted", Toast.LENGTH_SHORT)).show()
+    private fun deleteRecipe(id: Int) {
+        if (id != -1) {
+            val anID = ids.indexOf(id.toLong())
+            deleteFromDB(id.toLong())
+            recipes.removeAt(anID)
+            ids.removeAt(anID)
+            scrollRecipe.adapter = stackAdapter
+            isInLongClick(true)
         }
-        dialog.show()
     }
 
     /** @deleteFromDB allows delete one selected record from DB
@@ -96,52 +108,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /** @addNewRecipe allows insert new record to DB using the name of the recipe and url.
-     * Also can use only the url - the system uses the title of the web page as a name.
+    /** @addNewRecipe allows insert new record to DB using url.
+     *  System uses the title of the web page as a name.
      */
     private fun addNewRecipe() {
-        val dialog = Dialog(this@MainActivity)
-        dialog.setContentView(R.layout.dialog_newrecipe)
-
-        val btnOK = dialog.findViewById<ImageButton>(R.id.btn_done)
-        val btnCANCEL = dialog.findViewById<ImageButton>(R.id.btn_cancel)
-        val newRecipeName = dialog.findViewById<EditText>(R.id.edittext_recipe_name)
-        val newRecipeUrl = dialog.findViewById<EditText>(R.id.edittext_url)
-
-        val fromClipboard = getFromClipboard()
-        newRecipeUrl.setText(fromClipboard)
-
-        btnOK.setOnClickListener {
-            val name = newRecipeName.editableText.toString()
-            val address = newRecipeUrl.editableText.toString()
-            when {
-                address == "" -> {
-                    (Toast.makeText(this, "Incorrect data", Toast.LENGTH_SHORT)).show()
-                }
-                name == "" -> {
-                    dialog.dismiss()
-                    newRecipeWithoutName(address)
-                }
-                else -> {
-                    dialog.dismiss()
-                    newRecipeWithName(name, address)
-                }
-            }
-        }
-        btnCANCEL.setOnClickListener {
-            dialog.dismiss()
-        }
-        dialog.show()
-    }
-
-    /** @newRecipeWithoutName - insert new record into DB (using only url)
-     * title is taken from html code in AsyncTask, then start the "newRecipeWithName" function
-     */
-    private fun newRecipeWithoutName(url: String) {
+        val address =  fromClipboard.toString()
         val parse = ParseTask()
-        parse.execute(url)
+        parse.execute(address)
         val title = parse.get()
-        newRecipeWithName(title, url)
+        newRecipeWithName(title, address)
     }
 
     /** @newRecipeWithName - insert new record into DB (using name and url)
@@ -158,10 +133,10 @@ class MainActivity : AppCompatActivity() {
             val id = insertTask.get()
             ids.add(id)
             stackAdapter.add(name)
-            svRecipes.adapter = stackAdapter
+            scrollRecipe.adapter = stackAdapter
             (Toast.makeText(mContext, "Recipe was added", Toast.LENGTH_SHORT)).show()
         } else {
-            (Toast.makeText(mContext, "This link is already exists in DB", Toast.LENGTH_SHORT)).show()
+            (Toast.makeText(mContext, "This link was already added", Toast.LENGTH_SHORT)).show()
         }
     }
 
@@ -198,5 +173,18 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return address
+    }
+
+    private fun isInLongClick(bool: Boolean){
+        btnADD.isClickable = bool
+        scrollRecipe.isClickable = bool
+        if (bool){
+            btnADD.alpha = 1f
+            btnDEL.visibility = View.INVISIBLE
+            selectedRecipeId = -1
+        } else {
+            btnADD.alpha = 0.5f
+            btnDEL.visibility = View.VISIBLE
+        }
     }
 }
