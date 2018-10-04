@@ -25,6 +25,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var llm: RecyclerView.LayoutManager
     private lateinit var imgUrls: ArrayList<String>
     private lateinit var recipeList: ArrayList<Recipe>
+    private lateinit var rvAdapter: RVAdapter
 
     private lateinit var btnADD: ImageButton
     private lateinit var btnDEL: ImageButton
@@ -99,6 +100,10 @@ class MainActivity : AppCompatActivity() {
         initializationData()
         initializationAdapter()
 
+        rvRecipes.setOnClickListener {
+            seeInBrowser(ids[it.id])
+        }
+
 //        stackAdapter = ArrayAdapter(mContext, R.layout.text_resipes, recipes)
 //        listRecipe.adapter = stackAdapter
 //        listRecipe.isLongClickable = true
@@ -125,8 +130,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initializationAdapter() {
-        val adapter = RVAdapter(recipes, imgUrls)
-        rvRecipes.adapter = adapter
+        val indexes = arrayListOf<Int>()
+        ids.forEach {
+            indexes.add(it.toInt())
+        }
+        rvAdapter = RVAdapter(recipes, imgUrls, indexes)
+        rvRecipes.adapter = rvAdapter
     }
 
     private fun initializationData() {
@@ -163,32 +172,44 @@ class MainActivity : AppCompatActivity() {
     /** @addNewRecipe allows insert new record to DB using url.
      *  System uses the title of the web page as a name.
      */
-    private fun addNewRecipe() {
+//    private fun addNewRecipe() {
+    fun addNewRecipe(v: View) {
         val address =  fromClipboard.toString()
-        val titleParser = Task_getTitle()
-        titleParser.execute(address)
-        val title = titleParser.get()
-        newRecipeWithName(title, address)
+        if (address.contains("http")){
+            val titleParser = Task_getTitle()
+            titleParser.execute(address)
+            val title = titleParser.get()
+            newRecipeWithName(title, address)
+        } else {
+            Toast.makeText(mContext, "This is not an URL", Toast.LENGTH_SHORT)
+                    .show()
+        }
     }
 
     /** @newRecipeWithName - insert new record into DB (using name and url)
      * insertion mechanism is realized in the background via AsyncTask
      */
     private fun newRecipeWithName(name: String, url: String) {
-        val testParser = Task_getImageUrl()
-        testParser.execute(url)
-        val imgUrl = testParser.get()
+        val imgParser = Task_getImageUrl()
+        imgParser.execute(url)
+        val imgUrl = imgParser.get()
         val checkTask = Task_getIdByAddress()
         checkTask.execute(arrayOf(url, mContext))
         val potentialId = checkTask.get()
         if (potentialId < 0){
-            val recipe = Recipe(name, url, "")
+            val recipe = Recipe(name, url, "", imgUrl)
             val insertTask = Task_insertToDB()
             insertTask.execute(arrayOf(recipe, mContext))
             val id = insertTask.get()
+//            ids.add(id)
+//            stackAdapter.add(name)
+//            listRecipe.adapter = stackAdapter
+            recipes.add(name)
+            imgUrls.add(imgUrl)
             ids.add(id)
-            stackAdapter.add(name)
-            listRecipe.adapter = stackAdapter
+//            rvAdapter = RVAdapter(recipes, imgUrls, ids)
+//            rvRecipes.adapter = rvAdapter
+
             (Toast.makeText(mContext, "Recipe was added", Toast.LENGTH_SHORT)).show()
         } else {
             (Toast.makeText(mContext, "This link was already added", Toast.LENGTH_SHORT)).show()

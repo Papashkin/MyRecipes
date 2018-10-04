@@ -81,6 +81,7 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
         android:gravity="center"
+        android:onClick="addNewRecipe"
         android:layout_margin="16dp"/>
 
 </RelativeLayout>
