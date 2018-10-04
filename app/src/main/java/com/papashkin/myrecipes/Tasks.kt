@@ -22,7 +22,11 @@ class Task_insertToDB: AsyncTask<Array<Any>, Void, Long>(){
         val recipe = params[0][0] as Recipe
         val context = params[0][1] as Context
         val db = RecipeDatabase.getRecipeDatabase(context)
-        val id = db.recipeDao().insert(recipe)
+        val id = if (recipe.name.isNotEmpty()){
+            db.recipeDao().insert(recipe)
+        } else {
+            -1L
+        }
         db.close()
         return id
     }
@@ -45,13 +49,10 @@ class Task_readAllFromDB: AsyncTask<Context, Void, Map<Long, String>>(){
         val context = params[0]
         val db = RecipeDatabase.getRecipeDatabase(context)
         val recipes = db.recipeDao().idAndName
-//        val ids = db.recipeDao().iDs
-//        val names = db.recipeDao().names
         db.close()
         val recipeMap = mutableMapOf<Long, String>()
-        for (i in recipes.indices){ //for (i in ids.indices){
-//            recipeMap.put(ids[i], names[i])
-            recipeMap.put(recipes[i].id, recipes[i].name)
+        recipes.forEach {
+            recipeMap.put(it.id, it.name)
         }
         return recipeMap
     }
@@ -125,9 +126,48 @@ class Task_getImageUrl:AsyncTask<String, Void, String>(){
             }
         } catch (ex: Exception){
             Log.e("[GET REQUEST]", ex.localizedMessage)
-//            "Url is absent"
         }
         return imageUrl
+    }
+}
+
+class Task_getImageUrlById: AsyncTask<Array<Any>, Void, String>(){
+    override fun doInBackground(vararg params: Array<Any>): String {
+        val id = params[0][0] as Long
+        val context = params[0][1] as Context
+        val db = RecipeDatabase.getRecipeDatabase(context)
+        val imgUrl = db.recipeDao().getImageUrlById(id)
+        db.close()
+        return imgUrl
+    }
+}
+
+class Task_getAddressById: AsyncTask<Array<Any>, Void, String>(){
+    override fun doInBackground(vararg params: Array<Any>): String {
+        val id = params[0][0] as Long
+        val context = params[0][1] as Context
+        val db = RecipeDatabase.getRecipeDatabase(context)
+        val address = db.recipeDao().getAddressById(id)
+        db.close()
+        return address
+    }
+}
+
+class Task_checkEmptyRecords: AsyncTask<Context, Void, Boolean>(){
+    override fun doInBackground(vararg params: Context): Boolean {
+        val isReady = false
+        val context = params[0]
+        val db = RecipeDatabase.getRecipeDatabase(context)
+        val recipes = db.recipeDao().all
+        for (i in recipes.indices){
+            val name = recipes[i].name
+            val address = recipes[i].address
+            if (name.isEmpty() || address.isEmpty()){
+                db.recipeDao().delete(recipes[i])
+            }
+        }
+        db.close()
+        return !isReady
     }
 
 }

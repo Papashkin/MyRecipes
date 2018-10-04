@@ -6,16 +6,25 @@ import android.content.Context
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.widget.*
 
 @Suppress("DEPRECATION")
 class MainActivity : AppCompatActivity() {
+    var isReady = false
+
     private lateinit var recipes: ArrayList<String>
     private lateinit var ids: ArrayList<Long>
     private lateinit var mContext: Context
     private lateinit var stackAdapter: ArrayAdapter<String>
-    private lateinit var scrollRecipe: ListView
+
+    private lateinit var listRecipe: ListView
+    private lateinit var rvRecipes: RecyclerView
+    private lateinit var llm: RecyclerView.LayoutManager
+    private lateinit var imgUrls: ArrayList<String>
+    private lateinit var recipeList: ArrayList<Recipe>
 
     private lateinit var btnADD: ImageButton
     private lateinit var btnDEL: ImageButton
@@ -31,24 +40,33 @@ class MainActivity : AppCompatActivity() {
         mContext = applicationContext
         fromClipboard = getFromClipboard()
 
-        btnADD = findViewById(R.id.btn_plus)
-        btnADD.visibility = if(fromClipboard != "") {
-            View.VISIBLE
-        } else View.INVISIBLE
-        btnADD.setOnClickListener { addNewRecipe()
-        }
+//        btnADD = findViewById(R.id.btn_plus)
+//        btnADD.visibility = if(fromClipboard != "") {
+//            View.VISIBLE
+//        } else View.INVISIBLE
+//        btnADD.setOnClickListener { addNewRecipe()
+//        }
+//
+//        btnDEL = findViewById(R.id.btn_minus)
+//        btnDEL.setOnClickListener {
+//            deleteRecipe(selectedRecipeId)
+//        }
+//        btnDEL.visibility = View.INVISIBLE
 
-        btnDEL = findViewById(R.id.btn_minus)
-        btnDEL.setOnClickListener {
-            deleteRecipe(selectedRecipeId)
-        }
-        btnDEL.visibility = View.INVISIBLE
+//        listRecipe = findViewById(R.id.list_recipes)
 
-        scrollRecipe = findViewById(R.id.list_recipes)
+        rvRecipes = findViewById(R.id.rv_recipes)
+        llm = LinearLayoutManager(mContext)
+        rvRecipes.layoutManager = llm
+
         recipes = arrayListOf()
         ids = arrayListOf()
+        imgUrls = arrayListOf()
 
         db = RecipeDatabase.getRecipeDatabase(mContext)
+
+        val checker = Task_checkEmptyRecords()
+        checker.execute(mContext)
 
         val task = Task_readAllFromDB()
         task.execute(mContext)
@@ -60,28 +78,62 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        stackAdapter = ArrayAdapter(mContext, R.layout.text_resipes, recipes)
-        scrollRecipe.adapter = stackAdapter
-        scrollRecipe.isLongClickable = true
-
-        scrollRecipe.setOnItemLongClickListener { _, view, position, _ ->
-            if (btnDEL.visibility == View.INVISIBLE){
-                selectedRecipeId = ids[position].toInt()
-                view.alpha = 0.5f
-                isInLongClick(false)
+        val runnable = Runnable{
+            ids.forEach {
+                val addressGetter = Task_getAddressById()
+                addressGetter.execute(arrayOf(it, mContext))
+                val address = addressGetter.get()
+                val imgUrlGetter = Task_getImageUrl()
+                imgUrlGetter.execute(address)
+                imgUrls.add(imgUrlGetter.get())
             }
-            true
+            isReady = true
         }
+        val thread = Thread(runnable)
+        thread.start()
 
-        scrollRecipe.setOnItemClickListener { _, view, position, _ ->
-            if (btnDEL.visibility == View.INVISIBLE) {
-                seeInBrowser(ids[position])
-            } else {
-                if (view.alpha == 0.5f){
-                    view.alpha = 1f
-                    isInLongClick(true)
-                }
-            }
+        do {
+            Thread.sleep(500)
+        } while (!isReady)
+
+        initializationData()
+        initializationAdapter()
+
+//        stackAdapter = ArrayAdapter(mContext, R.layout.text_resipes, recipes)
+//        listRecipe.adapter = stackAdapter
+//        listRecipe.isLongClickable = true
+
+//        listRecipe.setOnItemLongClickListener { _, view, position, _ ->
+//            if (btnDEL.visibility == View.INVISIBLE){
+//                selectedRecipeId = ids[position].toInt()
+//                view.alpha = 0.5f
+//                isInLongClick(false)
+//            }
+//            true
+//        }
+
+//        listRecipe.setOnItemClickListener { _, view, position, _ ->
+//            if (btnDEL.visibility == View.INVISIBLE) {
+//                seeInBrowser(ids[position])
+//            } else {
+//                if (view.alpha == 0.5f){
+//                    view.alpha = 1f
+//                    isInLongClick(true)
+//                }
+//            }
+//        }
+    }
+
+    private fun initializationAdapter() {
+        val adapter = RVAdapter(recipes, imgUrls)
+        rvRecipes.adapter = adapter
+    }
+
+    private fun initializationData() {
+//        Thread.sleep(4000)
+        recipeList = arrayListOf()
+        for (i in recipes.indices){
+            recipeList.add(Recipe(recipes[i], imgUrls[i]))
         }
     }
 
@@ -91,7 +143,7 @@ class MainActivity : AppCompatActivity() {
             deleteFromDB(id.toLong())
             recipes.removeAt(anID)
             ids.removeAt(anID)
-            scrollRecipe.adapter = stackAdapter
+            listRecipe.adapter = stackAdapter
             isInLongClick(true)
         }
     }
@@ -113,9 +165,6 @@ class MainActivity : AppCompatActivity() {
      */
     private fun addNewRecipe() {
         val address =  fromClipboard.toString()
-//        val parse = ParseTask()
-//        parse.execute(address)
-//        val title = parse.get()
         val titleParser = Task_getTitle()
         titleParser.execute(address)
         val title = titleParser.get()
@@ -139,7 +188,7 @@ class MainActivity : AppCompatActivity() {
             val id = insertTask.get()
             ids.add(id)
             stackAdapter.add(name)
-            scrollRecipe.adapter = stackAdapter
+            listRecipe.adapter = stackAdapter
             (Toast.makeText(mContext, "Recipe was added", Toast.LENGTH_SHORT)).show()
         } else {
             (Toast.makeText(mContext, "This link was already added", Toast.LENGTH_SHORT)).show()
@@ -183,7 +232,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun isInLongClick(bool: Boolean){
         btnADD.isClickable = bool
-        scrollRecipe.isClickable = bool
+        listRecipe.isClickable = bool
         if (bool){
             btnADD.alpha = 1f
             btnDEL.visibility = View.INVISIBLE

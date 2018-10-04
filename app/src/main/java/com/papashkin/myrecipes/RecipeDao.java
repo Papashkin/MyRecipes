@@ -40,6 +40,18 @@ public interface RecipeDao {
     @Query("SELECT id FROM recipesTab WHERE address = :recipeAddress")
     Long getIdByAddress(String recipeAddress);
 
+    @Query("SELECT imageUrl FROM recipesTab")
+    List<String> getImageUrls();
+
+    @Query("SELECT imageUrl FROM recipesTab WHERE id = :id")
+    String getImageUrlById(Long id);
+
+    @Query("UPDATE recipesTab SET imageUrl = :url WHERE id = :id")
+    void updImageUrl(String url, Long id);
+
+    @Query("UPDATE recipesTab SET text = :text WHERE id = :id")
+    void updText(String text, Long id);
+
     @Insert
     Long insert(Recipe recipe);
 

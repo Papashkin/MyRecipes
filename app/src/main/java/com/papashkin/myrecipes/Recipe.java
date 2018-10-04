@@ -3,6 +3,7 @@ package com.papashkin.myrecipes;
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
+import android.support.annotation.NonNull;
 
 @Entity(tableName = "recipesTab")
 class Recipe {
@@ -33,6 +34,13 @@ class Recipe {
         this.name = name;
         this.address = address;
         this.text = text;
+        this.imageUrl = imgUrl;
+    }
+
+    Recipe(String name, String imgUrl){
+        this.name = name;
+        this.address = "";
+        this.text = "";
         this.imageUrl = imgUrl;
     }
 
