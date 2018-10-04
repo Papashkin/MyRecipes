@@ -2,6 +2,9 @@ package com.papashkin.myrecipes
 
 import android.content.Context
 import android.os.AsyncTask
+import android.util.Log
+import org.jsoup.Jsoup
+import java.lang.Exception
 
 class Task_getIdByAddress: AsyncTask<Array<Any>, Void, Long>(){
     override fun doInBackground(vararg params: Array<Any>): Long {
@@ -41,12 +44,14 @@ class Task_readAllFromDB: AsyncTask<Context, Void, Map<Long, String>>(){
     override fun doInBackground(vararg params: Context): Map<Long, String> {
         val context = params[0]
         val db = RecipeDatabase.getRecipeDatabase(context)
-        val ids = db.recipeDao().iDs
-        val names = db.recipeDao().names
+        val recipes = db.recipeDao().idAndName
+//        val ids = db.recipeDao().iDs
+//        val names = db.recipeDao().names
         db.close()
         val recipeMap = mutableMapOf<Long, String>()
-        for (i in ids.indices){
-            recipeMap.put(ids[i], names[i])
+        for (i in recipes.indices){ //for (i in ids.indices){
+//            recipeMap.put(ids[i], names[i])
+            recipeMap.put(recipes[i].id, recipes[i].name)
         }
         return recipeMap
     }
@@ -62,4 +67,67 @@ class Task_getNameAndAddressById: AsyncTask<Array<Any>, Void, Array<String>>(){
         db.close()
         return arrayOf(name, address)
     }
+}
+
+class Task_getTitle: AsyncTask<String, Void, String>(){
+    override fun doInBackground(vararg params: String?): String {
+//        val str: String
+//        str = try{
+//            val doc = Jsoup.connect(params[0]).get()
+//            val elements = doc.select("title")
+//            val nodes = elements[0].textNodes()
+//            nodes[0].toString()
+//        } catch (e: Exception){
+//            Log.e("[GET REQUEST]", e.localizedMessage)
+//            "Exception"
+//        }
+//        return str
+
+//        val title: String
+//        title = try {
+//            var str = ""
+//            val doc = Jsoup.connect(params[0]).get()
+//            val elements = doc.select("meta")
+//            elements.forEach {
+//                val prop = it.attr("property")
+//                if (prop == "og:title"){
+//                    str = it.attr("content")
+//                }
+//            }
+//            str
+//        } catch (ex: Exception){
+//            Log.e("[GET REQUEST]", ex.localizedMessage)
+//            "Exception"
+//        }
+//        return title
+
+        return try {
+            val doc = Jsoup.connect(params[0]).get()
+            doc.title()
+        } catch (ex: Exception){
+            Log.e("[GET REQUEST]", ex.localizedMessage)
+            ""
+        }
+    }
+}
+
+class Task_getImageUrl:AsyncTask<String, Void, String>(){
+    override fun doInBackground(vararg params: String?): String {
+        var imageUrl = ""
+        try {
+            val doc = Jsoup.connect(params[0]).get()
+            val elements = doc.select("meta")
+            elements.forEach {
+                val prop = it.attr("property")
+                if (prop == "og:image"){
+                    imageUrl = it.attr("content")
+                }
+            }
+        } catch (ex: Exception){
+            Log.e("[GET REQUEST]", ex.localizedMessage)
+//            "Url is absent"
+        }
+        return imageUrl
+    }
+
 }

@@ -113,9 +113,12 @@ class MainActivity : AppCompatActivity() {
      */
     private fun addNewRecipe() {
         val address =  fromClipboard.toString()
-        val parse = ParseTask()
-        parse.execute(address)
-        val title = parse.get()
+//        val parse = ParseTask()
+//        parse.execute(address)
+//        val title = parse.get()
+        val titleParser = Task_getTitle()
+        titleParser.execute(address)
+        val title = titleParser.get()
         newRecipeWithName(title, address)
     }
 
@@ -123,6 +126,9 @@ class MainActivity : AppCompatActivity() {
      * insertion mechanism is realized in the background via AsyncTask
      */
     private fun newRecipeWithName(name: String, url: String) {
+        val testParser = Task_getImageUrl()
+        testParser.execute(url)
+        val imgUrl = testParser.get()
         val checkTask = Task_getIdByAddress()
         checkTask.execute(arrayOf(url, mContext))
         val potentialId = checkTask.get()

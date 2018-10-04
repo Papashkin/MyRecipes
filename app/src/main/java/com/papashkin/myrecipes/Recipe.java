@@ -19,17 +19,28 @@ class Recipe {
     @ColumnInfo(name = "text")
     private String text;
 
+    @ColumnInfo(name = "imageUrl")
+    private String imageUrl;
+
     Recipe(String name, String address, String text){
         this.name = name;
         this.address = address;
         this.text = text;
+        this.imageUrl = "";
     }
 
-    public Long getUid() {
+    Recipe(String name, String address, String text, String imgUrl){
+        this.name = name;
+        this.address = address;
+        this.text = text;
+        this.imageUrl = imgUrl;
+    }
+
+    public Long getId() {
         return id;
     }
 
-    public void setUid(Long uid) {
+    public void setId(Long uid) {
         this.id = uid;
     }
 
@@ -55,6 +66,14 @@ class Recipe {
 
     public void setText(String text) {
         this.text = text;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
 }
