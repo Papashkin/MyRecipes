@@ -44,19 +44,19 @@ class Task_deleteFromDB: AsyncTask<Array<Any>, Void, Boolean>(){
     }
 }
 
-class Task_readAllFromDB: AsyncTask<Context, Void, Map<Long, String>>(){
-    override fun doInBackground(vararg params: Context): Map<Long, String> {
-        val context = params[0]
-        val db = RecipeDatabase.getRecipeDatabase(context)
-        val recipes = db.recipeDao().idAndName
-        db.close()
-        val recipeMap = mutableMapOf<Long, String>()
-        recipes.forEach {
-            recipeMap.put(it.id, it.name)
-        }
-        return recipeMap
-    }
-}
+//class Task_readIdsAndNames: AsyncTask<Context, Void, Map<Long, String>>(){
+//    override fun doInBackground(vararg params: Context): Map<Long, String> {
+//        val context = params[0]
+//        val db = RecipeDatabase.getRecipeDatabase(context)
+//        val recipes = db.recipeDao().idAndName
+//        db.close()
+//        val recipeMap = mutableMapOf<Long, String>()
+//        recipes.forEach {
+//            recipeMap.put(it.id, it.name)
+//        }
+//        return recipeMap
+//    }
+//}
 
 class Task_getNameAndAddressById: AsyncTask<Array<Any>, Void, Array<String>>(){
     override fun doInBackground(vararg params: Array<Any>): Array<String> {
@@ -72,36 +72,6 @@ class Task_getNameAndAddressById: AsyncTask<Array<Any>, Void, Array<String>>(){
 
 class Task_getTitle: AsyncTask<String, Void, String>(){
     override fun doInBackground(vararg params: String?): String {
-//        val str: String
-//        str = try{
-//            val doc = Jsoup.connect(params[0]).get()
-//            val elements = doc.select("title")
-//            val nodes = elements[0].textNodes()
-//            nodes[0].toString()
-//        } catch (e: Exception){
-//            Log.e("[GET REQUEST]", e.localizedMessage)
-//            "Exception"
-//        }
-//        return str
-
-//        val title: String
-//        title = try {
-//            var str = ""
-//            val doc = Jsoup.connect(params[0]).get()
-//            val elements = doc.select("meta")
-//            elements.forEach {
-//                val prop = it.attr("property")
-//                if (prop == "og:title"){
-//                    str = it.attr("content")
-//                }
-//            }
-//            str
-//        } catch (ex: Exception){
-//            Log.e("[GET REQUEST]", ex.localizedMessage)
-//            "Exception"
-//        }
-//        return title
-
         return try {
             val doc = Jsoup.connect(params[0]).get()
             doc.title()
@@ -131,16 +101,16 @@ class Task_getImageUrl:AsyncTask<String, Void, String>(){
     }
 }
 
-class Task_getImageUrlById: AsyncTask<Array<Any>, Void, String>(){
-    override fun doInBackground(vararg params: Array<Any>): String {
-        val id = params[0][0] as Long
-        val context = params[0][1] as Context
-        val db = RecipeDatabase.getRecipeDatabase(context)
-        val imgUrl = db.recipeDao().getImageUrlById(id)
-        db.close()
-        return imgUrl
-    }
-}
+//class Task_getImageUrlById: AsyncTask<Array<Any>, Void, String>(){
+//    override fun doInBackground(vararg params: Array<Any>): String {
+//        val id = params[0][0] as Long
+//        val context = params[0][1] as Context
+//        val db = RecipeDatabase.getRecipeDatabase(context)
+//        val imgUrl = db.recipeDao().getImageUrlById(id)
+//        db.close()
+//        return imgUrl
+//    }
+//}
 
 class Task_getAddressById: AsyncTask<Array<Any>, Void, String>(){
     override fun doInBackground(vararg params: Array<Any>): String {
@@ -169,5 +139,4 @@ class Task_checkEmptyRecords: AsyncTask<Context, Void, Boolean>(){
         db.close()
         return !isReady
     }
-
 }

@@ -7,70 +7,26 @@
     android:background="@color/text_icons"
     android:orientation="vertical"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity"
+    android:id="@+id/layout_main">
 
-    <Space
-    android:layout_width="match_parent"
-    android:layout_height="8dp" />
-
-    <!--<TextView-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:text="@string/my_recipes_text"-->
-        <!--android:textSize="40sp"-->
-        <!--android:textColor="@color/primary_text"-->
-        <!--android:gravity="center"/>-->
-
-    <!--<Space-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="32dp" />-->
-
-    <!--<ListView-->
-        <!--android:id="@+id/list_recipes"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="300dp"-->
-        <!--android:layout_gravity="center"-->
-        <!--android:textAlignment="center" />-->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:visibility="visible"
+        android:background="@color/primary_dark"
+        android:max="100"/>
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rv_recipes"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <!--<Space-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="32dp" />-->
-
-    <!--<TableRow-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent"-->
-        <!--android:gravity="end"-->
-        <!--android:layout_alignParentBottom="true">-->
-
-        <!--<ImageButton-->
-            <!--android:id="@+id/btn_minus"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_gravity="end"-->
-            <!--android:layout_margin="16dp"-->
-            <!--android:gravity="center"-->
-            <!--android:textAlignment="center"-->
-            <!--android:src="@drawable/minus_64"-->
-            <!--android:background="@color/text_icons" />-->
-
-        <!--<ImageButton-->
-            <!--android:id="@+id/btn_plus"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_gravity="end"-->
-            <!--android:layout_margin="16dp"-->
-            <!--android:gravity="center"-->
-            <!--android:textAlignment="center"-->
-            <!--android:src="@drawable/plus_64" />-->
-
-    <!--</TableRow>-->
-
     <Button
+        android:id="@+id/btn_newRecipe"
         android:layout_width="64dp"
         android:layout_height="64dp"
         android:text="+"
@@ -80,7 +36,7 @@
         android:background="@drawable/shape_btn_plus"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
-        android:gravity="center"
+        android:gravity="center|bottom"
         android:onClick="addNewRecipe"
         android:layout_margin="16dp"/>
 

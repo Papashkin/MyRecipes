@@ -44,16 +44,17 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder> {
     public void onBindViewHolder(@NonNull PlaceViewHolder placeViewHolder, int i) {
         placeViewHolder.title.setText(recipeTitles.get(i));
         placeViewHolder.itemView.setId(IDs.get(i));
-        if (!imageURLs.get(i).isEmpty()){
-            Picasso.with(appContext)
-                    .load(imageURLs.get(i))
-                    .placeholder(R.drawable.drawable_placeholder)
-                    .into(placeViewHolder.img);
-        }
+        Picasso.with(appContext)
+                .load(imageURLs.get(i))
+                .resize(256,200)
+                .placeholder(R.drawable.drawable_placeholder)
+                .into(placeViewHolder.img);
 
         placeViewHolder.itemView.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
+                int id = IDs.indexOf(v.getId());
+                String title = recipeTitles.get(id);
                 Context context = v.getContext();
                 AsyncTask urlGetter = new Task_getAddressById();
                 Object[][] list = {{(long) v.getId(), context}};
@@ -66,7 +67,7 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder> {
                 }
                 Intent intent = new Intent(context, WebBrowserRecipe.class);
                 intent.putExtra("URL", url);
-                intent.putExtra("NAME", "just recipe");
+                intent.putExtra("NAME", title);
                 AppCompatActivity activity = (AppCompatActivity) context;
                 activity.startActivity(intent);
             }

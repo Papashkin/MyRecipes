@@ -1,6 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
-<WebView
-    android:id="@+id/recipeView"
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" />
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/primary">
+
+    <LinearLayout
+        android:id="@+id/browser_meta"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/primary">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/menu_40_white1"
+            android:layout_gravity="center"
+            android:padding="4dp"
+            android:layout_margin="4dp"
+            android:onClick="showPopupMenu"/>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_margin="8dp">
+
+            <TextView
+                android:id="@+id/browser_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:textColor="@color/text_icons"
+                android:textSize="22sp"
+                android:ellipsize="end"
+                android:maxLines="1"/>
+
+            <TextView
+                android:id="@+id/browser_url"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginBottom="4dp"
+                android:textColor="@color/divider"
+                android:layout_below="@id/browser_title"
+                android:textSize="12sp"
+                android:ellipsize="end"
+                android:maxLines="1" />
+
+            <ProgressBar
+                android:id="@+id/browser_progressbar"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginBottom="4dp"
+                android:indeterminate="true"
+                android:visibility="invisible"
+                android:layout_below="@id/browser_title"
+                android:background="@color/primary"
+                android:max="100"/>
+
+        </RelativeLayout>
+    </LinearLayout>
+
+    <WebView
+        android:id="@+id/recipeView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/browser_meta" />
+
+</RelativeLayout>
