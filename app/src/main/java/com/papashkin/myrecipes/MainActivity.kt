@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import android.widget.*
 import org.jsoup.Jsoup
@@ -85,7 +86,7 @@ class MainActivity : AppCompatActivity() {
         }).start()
 
         do {
-            progressBar.visibility = View.VISIBLE
+//            progressBar.visibility = View.VISIBLE
             Thread.sleep(200)
         } while (!isReady)
 
@@ -112,17 +113,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onRestart() {
-        progressBar.visibility = View.VISIBLE
+//        progressBar.visibility = View.VISIBLE
         if (mBundle != null) {
             recipes.clear()
             ids.clear()
             imgUrls.clear()
-            recipes = mBundle.getStringArrayList("BUNDLE_RECIPES")
+            recipes = mBundle.getStringArrayList("BUNDLE_RECIPES") as ArrayList<String>
             val IDs = mBundle.getIntegerArrayList("BUNDLE_IDS")
             IDs.forEach {
                 ids.add(it.toLong())
             }
-            imgUrls = mBundle.getStringArrayList("BUNDLE_URLS")
+            imgUrls = mBundle.getStringArrayList("BUNDLE_URLS") as ArrayList<String>
         }
         initializationAdapter()
         initializationData()
@@ -130,8 +131,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initializationAdapter() {
-        rvAdapter = RVAdapter(recipes, imgUrls, ids)
+//        rvAdapter = RVAdapter(recipes, imgUrls, ids)
+        rvAdapter = RVAdapter(recipeList)
         rvRecipes.adapter = rvAdapter
+        val callback = RecipeTouchCallback(rvAdapter)
+        val touchHelper = ItemTouchHelper(callback)
+        touchHelper.attachToRecyclerView(rvRecipes)
     }
 
     private fun initializationData() {
