@@ -4,7 +4,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-//import android.os.Handler
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.View
@@ -15,21 +14,21 @@ import java.lang.Exception
 //@Suppress("DEPRECATION")
 class MainActivity : AppCompatActivity() {
     var isReady = false
-    var progressStatus = 0
-//    val handler = Handler()
+//    var progressStatus = 0
 
     private lateinit var recipes: ArrayList<String>
     private lateinit var ids: ArrayList<Long>
+    private lateinit var imgUrls: ArrayList<String>
+    private lateinit var recipeList: ArrayList<Recipe>
+
     private lateinit var mContext: Context
 
     private lateinit var rvRecipes: RecyclerView
     private lateinit var llm: RecyclerView.LayoutManager
-    private lateinit var imgUrls: ArrayList<String>
-    private lateinit var recipeList: ArrayList<Recipe>
     private lateinit var rvAdapter: RVAdapter
-
     private lateinit var progressBar: ProgressBar
     private lateinit var btnAdd: Button
+    private lateinit var mBundle: Bundle
 
     private lateinit var fromClipboard: CharSequence
 
@@ -39,12 +38,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         mContext = applicationContext
 
-        progressBar = findViewById(R.id.progressBar)
-        progressBar.progress = progressStatus
-        progressBar.visibility = View.VISIBLE
-
+        progressBar = findViewById(R.id.main_progressBar)
         btnAdd = findViewById(R.id.btn_newRecipe)
         rvRecipes = findViewById(R.id.rv_recipes)
+        rvRecipes.visibility = View.INVISIBLE
         llm = LinearLayoutManager(mContext)
         rvRecipes.layoutManager = llm
 
@@ -88,27 +85,59 @@ class MainActivity : AppCompatActivity() {
         }).start()
 
         do {
+            progressBar.visibility = View.VISIBLE
             Thread.sleep(200)
         } while (!isReady)
 
         initializationData()
         initializationAdapter()
+        rvRecipes.visibility = View.VISIBLE
         progressBar.visibility = View.INVISIBLE
     }
 
-    private fun initializationAdapter() {
-        val indexes = arrayListOf<Int>()
+//    override fun onDestroy() {
+//        super.onDestroy()
+//    }
+
+    override fun onPause() {
+        mBundle = Bundle()
+        val IDs = arrayListOf<Int>()
         ids.forEach {
-            indexes.add(it.toInt())
+            IDs.add(it.toInt())
         }
-        rvAdapter = RVAdapter(recipes, imgUrls, indexes)
+        mBundle.putStringArrayList("BUNDLE_RECIPES", recipes)
+        mBundle.putIntegerArrayList("BUNDLE_IDS", IDs)
+        mBundle.putStringArrayList("BUNDLE_URLS", imgUrls)
+        super.onPause()
+    }
+
+    override fun onRestart() {
+        progressBar.visibility = View.VISIBLE
+        if (mBundle != null) {
+            recipes.clear()
+            ids.clear()
+            imgUrls.clear()
+            recipes = mBundle.getStringArrayList("BUNDLE_RECIPES")
+            val IDs = mBundle.getIntegerArrayList("BUNDLE_IDS")
+            IDs.forEach {
+                ids.add(it.toLong())
+            }
+            imgUrls = mBundle.getStringArrayList("BUNDLE_URLS")
+        }
+        initializationAdapter()
+        initializationData()
+        super.onRestart()
+    }
+
+    private fun initializationAdapter() {
+        rvAdapter = RVAdapter(recipes, imgUrls, ids)
         rvRecipes.adapter = rvAdapter
     }
 
     private fun initializationData() {
         recipeList = arrayListOf()
         for (i in recipes.indices){
-            recipeList.add(Recipe(recipes[i], imgUrls[i]))
+            recipeList.add(Recipe(recipes[i], imgUrls[i], ids[i]))
         }
     }
 
@@ -140,6 +169,7 @@ class MainActivity : AppCompatActivity() {
      */
 //    private fun addNewRecipe() {
     fun addNewRecipe(v: View) {
+        progressBar.visibility = View.VISIBLE
         val address =  fromClipboard.toString()
         if (address.contains("http")){
             val titleParser = Task_getTitle()
@@ -150,6 +180,7 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(mContext, "This is not an URL", Toast.LENGTH_SHORT)
                     .show()
         }
+        progressBar.visibility = View.INVISIBLE
     }
 
     /** @newRecipeWithName - insert new record into DB (using name and url)
@@ -164,13 +195,28 @@ class MainActivity : AppCompatActivity() {
         val potentialId = checkTask.get()
         if (potentialId < 0){
             val recipe = Recipe(name, url, "", imgUrl)
-            val insertTask = Task_insertToDB()
-            insertTask.execute(arrayOf(recipe, mContext))
-            val id = insertTask.get()
+//            val insertTask = Task_insertToDB()
+//            insertTask.execute(arrayOf(recipe, mContext))
+            var id = -1L
+            val newRecipe = Runnable{
+                val db = RecipeDatabase.getRecipeDatabase(mContext)
+                id = if (recipe.name.isNotEmpty()){
+                    db.recipeDao().insert(recipe)
+                } else {
+                    -1L
+                }
+                db.close()
+            }
+            progressBar.visibility = View.VISIBLE
+            val newThread = Thread(newRecipe)
+            newThread.join()
+            newThread.start()
             recipes.add(name)
             imgUrls.add(imgUrl)
             ids.add(id)
+//            rvAdapter.notifyItemInserted(ids.lastIndex)
             rvAdapter.notifyDataSetChanged()
+            progressBar.visibility = View.INVISIBLE
             Toast.makeText(mContext, "Recipe was added", Toast.LENGTH_SHORT)
                     .show()
         } else {

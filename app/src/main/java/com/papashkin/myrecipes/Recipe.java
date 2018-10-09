@@ -44,6 +44,14 @@ class Recipe {
         this.imageUrl = imgUrl;
     }
 
+    Recipe(String name, String imgUrl, Long id){
+        this.name = name;
+        this.address = "";
+        this.text = "";
+//        this.id = id;
+        this.imageUrl = imgUrl;
+    }
+
     public Long getId() {
         return id;
     }

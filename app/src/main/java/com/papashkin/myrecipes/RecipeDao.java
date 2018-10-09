@@ -13,8 +13,8 @@ public interface RecipeDao {
     @Query("SELECT * FROM recipesTab")
     List<Recipe> getAll();
 
-    @Query("SELECT id, name FROM recipesTab")
-    List<Recipe> getIdAndName();
+//    @Query("SELECT id, name FROM recipesTab")
+//    List<Recipe> getIdAndName();
 
     @Query("SELECT id FROM recipesTab")
     List<Long> getIDs();
@@ -51,6 +51,9 @@ public interface RecipeDao {
 
     @Query("UPDATE recipesTab SET text = :text WHERE id = :id")
     void updText(String text, Long id);
+
+    @Query("UPDATE recipesTab SET name = :text WHERE id = :id")
+    void updTitle(String text, Long id);
 
     @Insert
     Long insert(Recipe recipe);

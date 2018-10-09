@@ -44,20 +44,6 @@ class Task_deleteFromDB: AsyncTask<Array<Any>, Void, Boolean>(){
     }
 }
 
-//class Task_readIdsAndNames: AsyncTask<Context, Void, Map<Long, String>>(){
-//    override fun doInBackground(vararg params: Context): Map<Long, String> {
-//        val context = params[0]
-//        val db = RecipeDatabase.getRecipeDatabase(context)
-//        val recipes = db.recipeDao().idAndName
-//        db.close()
-//        val recipeMap = mutableMapOf<Long, String>()
-//        recipes.forEach {
-//            recipeMap.put(it.id, it.name)
-//        }
-//        return recipeMap
-//    }
-//}
-
 class Task_getNameAndAddressById: AsyncTask<Array<Any>, Void, Array<String>>(){
     override fun doInBackground(vararg params: Array<Any>): Array<String> {
         val id = params[0][0] as Long
@@ -138,5 +124,18 @@ class Task_checkEmptyRecords: AsyncTask<Context, Void, Boolean>(){
         }
         db.close()
         return !isReady
+    }
+}
+
+
+class Task_newTitle: AsyncTask<Array<Any>, Void, Boolean>(){
+    override fun doInBackground(vararg params: Array<Any>): Boolean {
+        val title = params[0][0] as String
+        val id = params[0][1] as Long
+        val context = params[0][2] as Context
+        val db = RecipeDatabase.getRecipeDatabase(context)
+        db.recipeDao().updTitle(title, id)
+        db.close()
+        return true
     }
 }
