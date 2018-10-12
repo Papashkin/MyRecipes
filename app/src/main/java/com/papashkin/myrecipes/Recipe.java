@@ -3,10 +3,13 @@ package com.papashkin.myrecipes;
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
+import java.io.Serializable;
+
 @Entity(tableName = "recipesTab")
-class Recipe {
+class Recipe implements Serializable {
 
     @PrimaryKey(autoGenerate = true)
     Long id;

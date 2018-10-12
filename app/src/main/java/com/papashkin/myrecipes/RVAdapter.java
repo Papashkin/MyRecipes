@@ -1,36 +1,26 @@
 package com.papashkin.myrecipes;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.graphics.Point;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.Display;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.view.inputmethod.EditorInfo;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
-public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder>
-implements RecipeTouchAdapter{
+public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder> {
     private ArrayList<Recipe> recipeList;
     private static Context appContext;
 
@@ -46,9 +36,15 @@ implements RecipeTouchAdapter{
         assert wm != null;
         Display display = wm.getDefaultDisplay();
         Point size = new Point();
+        int orient = Resources.getSystem().getConfiguration().orientation;
         display.getSize(size);
-        scrWidth = size.x;
-        scrHeight = size.y;
+        if (orient == Configuration.ORIENTATION_PORTRAIT){
+            scrWidth = size.x;
+            scrHeight = size.y;
+        } else if (orient == Configuration.ORIENTATION_LANDSCAPE){
+            scrWidth = size.y;
+            scrHeight = size.x;
+        }
     }
 
     @NonNull
@@ -66,136 +62,42 @@ implements RecipeTouchAdapter{
     public void onBindViewHolder(@NonNull PlaceViewHolder placeViewHolder, int i) {
         final int index = i;
         placeViewHolder.title.setText(recipeList.get(i).getName());
-        placeViewHolder.itemView.setId(recipeList.get(i).id.intValue());
+        placeViewHolder.itemView.setId(recipeList.get(i).getId().intValue());
         Picasso.with(appContext)
                 .load(recipeList.get(i).getImageUrl())
                 .resize(scrWidth/4,scrHeight/8)
+                .placeholder(R.drawable.drawable_placeholder)
                 .into(placeViewHolder.img);
-
-//        placeViewHolder.itemView.setOnLongClickListener(new View.OnLongClickListener(){
-//            @Override
-//            public boolean onLongClick(View v) {
-//                final int anId = v.getId();
-//                TextView tv = v.findViewById(R.id.recipe_title);
-//                String title = recipeList.get(anId).getName();
-////                String title = recipeTitles.get(anId);
-//
-//                final Dialog dialog = new Dialog(appContext);
-//                dialog.setTitle("New name of recipe");
-//                dialog.setContentView(R.layout.dialog_newtitle);
-//                final EditText et = dialog.findViewById(R.id.edittext_dialog);
-//                Button btnOK = dialog.findViewById(R.id.dialog_ok);
-//                et.setText(title);
-//                et.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-//                    @Override
-//                    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-//                        Boolean isOk = false;
-//                        if (actionId == EditorInfo.IME_ACTION_DONE) {
-//                            String str = et.getEditableText().toString();
-//                            if (!str.equals("")) {
-//                                recipeList.get(anId).setName(str);
-////                               recipeTitles.set(anId, str);
-//                               updTitle(str, (long) anId);
-//                               isOk = true;
-//                            } else {
-//                                isOk =false;
-//                            }
-//                        } else {
-//                            isOk = false;
-//                        }
-//                        return isOk;
-//                    }
-//                });
-//
-//                btnOK.setOnClickListener(new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View v) {
-//                        String str = et.getEditableText().toString();
-//                        if (str.equals("")) {
-//                            Toast.makeText(
-//                                    appContext,
-//                                    "Please insert new title of the recipe",
-//                                    Toast.LENGTH_SHORT)
-//                                    .show();
-//                        } else dialog.dismiss();
-//                    }
-//                });
-//                dialog.show();
-//                return true;
-//            }
-//        });
-
-        placeViewHolder.itemView.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                String title = recipeList.get(index).getName();
-
-                Context context = v.getContext();
-                AsyncTask urlGetter = new Task_getAddressById();
-                Object[][] list = {{(long) v.getId(), context}};
-                String url = "";
-                try {
-                    urlGetter.execute(list);
-                    url = String.valueOf(urlGetter.get());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                Intent intent = new Intent(context, WebBrowserRecipe.class);
-                intent.putExtra("URL", url);
-                intent.putExtra("NAME", title);
-                AppCompatActivity activity = (AppCompatActivity) context;
-                activity.startActivity(intent);
-            }
-        });
     }
-
-//    private void updTitle(String title, Long id) {
-//        AsyncTask task_newTitle = new Task_newTitle();
-//        Object[][] params = {{title, id, appContext}};
-//        task_newTitle.execute(params);
-//        Boolean isReady = null;
-//        try {
-//            isReady = ((Task_newTitle) task_newTitle).get();
-//        } catch (Exception e) {
-//            isReady = false;
-//            e.printStackTrace();
-//        }
-//        if (isReady){
-//            Toast.makeText(
-//                    appContext, "Title was changed", Toast.LENGTH_SHORT)
-//                    .show();
-//            this.notifyDataSetChanged();
-//        }
-//    }
 
     @Override
     public int getItemCount() {
         return recipeList.size();
     }
 
+    public void addItem(Recipe recipe) {
+        recipeList.add(recipe);
+        notifyItemInserted(recipeList.size());
+    }
+
+    public void removeItem(int position) {
+        recipeList.remove(position);
+        notifyItemRemoved(position);
+        notifyItemRangeChanged(position, recipeList.size());
+    }
+
+    public void changeTitle(String newTitle, int pos){
+        recipeList.get(pos).setName(newTitle);
+        notifyDataSetChanged();
+    }
+
+    public Long getId(){
+        return this.getId();
+    }
+
     @Override
     public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
         super.onAttachedToRecyclerView(recyclerView);
-    }
-
-    @Override
-    public void onItemMove(int fromPosition, int toPosition) {
-
-    }
-
-    @Override
-    public void onItemDismiss(final int position) {
-        final Recipe recipe = recipeList.get(position);
-        new Thread(new Runnable(){
-            @Override
-            public void run() {
-                RecipeDatabase db = RecipeDatabase.getRecipeDatabase(appContext);
-                db.recipeDao().delete(recipe);
-                db.close();
-            }
-        }).start();
-        recipeList.remove(position);
-        notifyItemRemoved(position);
     }
 
     public static class PlaceViewHolder extends RecyclerView.ViewHolder{

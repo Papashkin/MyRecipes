@@ -4,7 +4,9 @@
     <string name="text_recipe_for_deleted">Select the recipe:</string>
     <string name="copy_the_link">Copy the link</string>
     <string name="share">Share</string>
+    <string name="main_menu_exit">Exit</string>
     <string name="exit">Exit</string>
     <string name="new_recipe">New recipe:</string>
     <string name="save_link">Save page</string>
+    <string name="main_menu_search">Search</string>
 </resources>

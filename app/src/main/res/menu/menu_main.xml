@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:title="@string/main_menu_exit"
+        android:id="@+id/menu_main_exit"
+        android:orderInCategory="2"
+        android:icon="@drawable/ic_exit_to_app_white_36dp"
+        app:showAsAction="always"/>
+
+    <item
+        android:title="@string/main_menu_search"
+        android:id="@+id/menu_main_search"
+        android:orderInCategory="1"
+        android:icon="@drawable/ic_search_white_36dp"
+        app:showAsAction="always"/>
+
+</menu>

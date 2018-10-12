@@ -44,18 +44,6 @@ class Task_deleteFromDB: AsyncTask<Array<Any>, Void, Boolean>(){
     }
 }
 
-class Task_getNameAndAddressById: AsyncTask<Array<Any>, Void, Array<String>>(){
-    override fun doInBackground(vararg params: Array<Any>): Array<String> {
-        val id = params[0][0] as Long
-        val context = params[0][1] as Context
-        val db = RecipeDatabase.getRecipeDatabase(context)
-        val address = db.recipeDao().getAddressById(id)
-        val name = db.recipeDao().getNameById(id)
-        db.close()
-        return arrayOf(name, address)
-    }
-}
-
 class Task_getTitle: AsyncTask<String, Void, String>(){
     override fun doInBackground(vararg params: String?): String {
         return try {
@@ -84,28 +72,6 @@ class Task_getImageUrl:AsyncTask<String, Void, String>(){
             Log.e("[GET REQUEST]", ex.localizedMessage)
         }
         return imageUrl
-    }
-}
-
-//class Task_getImageUrlById: AsyncTask<Array<Any>, Void, String>(){
-//    override fun doInBackground(vararg params: Array<Any>): String {
-//        val id = params[0][0] as Long
-//        val context = params[0][1] as Context
-//        val db = RecipeDatabase.getRecipeDatabase(context)
-//        val imgUrl = db.recipeDao().getImageUrlById(id)
-//        db.close()
-//        return imgUrl
-//    }
-//}
-
-class Task_getAddressById: AsyncTask<Array<Any>, Void, String>(){
-    override fun doInBackground(vararg params: Array<Any>): String {
-        val id = params[0][0] as Long
-        val context = params[0][1] as Context
-        val db = RecipeDatabase.getRecipeDatabase(context)
-        val address = db.recipeDao().getAddressById(id)
-        db.close()
-        return address
     }
 }
 

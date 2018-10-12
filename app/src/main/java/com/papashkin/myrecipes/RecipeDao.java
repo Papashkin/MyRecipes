@@ -13,8 +13,8 @@ public interface RecipeDao {
     @Query("SELECT * FROM recipesTab")
     List<Recipe> getAll();
 
-//    @Query("SELECT id, name FROM recipesTab")
-//    List<Recipe> getIdAndName();
+//    @Query("SELECT id, name, address, imageUrl FROM recipesTab")
+//    List<Recipe> getRecipes();
 
     @Query("SELECT id FROM recipesTab")
     List<Long> getIDs();

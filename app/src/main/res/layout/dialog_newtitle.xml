@@ -1,27 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:theme="@style/Theme.AppCompat.Dialog.Alert"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <EditText
-        android:id="@+id/edittext_dialog"
+        android:id="@+id/et_recipe"
+        android:layout_margin="4dp"
+        android:text="blablabla"
+        android:textColor="@color/primary_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:maxLines="2"
-        android:gravity="center"
-        android:hint="new name of recipe"
-        android:textSize="20sp"
-        android:textColor="@color/secondary_text"
         android:inputType="text"/>
 
-    <Button
-        android:id="@+id/dialog_ok"
-        android:text="OK"
-        android:gravity="center"
-        android:layout_centerInParent="true"
-        android:layout_below="@id/edittext_dialog"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
-</RelativeLayout>
+        <Button
+            android:id="@+id/btnOK"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SET"
+            android:background="@color/accent"
+            android:layout_margin="8dp"/>
+
+        <Button
+            android:id="@+id/btnCANCEL"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/btnOK"
+            android:text="CANCEL"
+            android:background="@color/accent"
+            android:layout_margin="8dp"/>
+
+    </RelativeLayout>
+</LinearLayout>
