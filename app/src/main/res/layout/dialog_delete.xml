@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:theme="@style/Theme.AppCompat.Dialog.Alert"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/et_recipe"
+        android:layout_margin="4dp"
+        android:text="@string/text_delete_recipe"
+        android:textSize="20sp"
+        android:lines="4"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:textColor="@color/primary_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/btnYES"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="YES"
+            android:background="@color/accent"
+            android:layout_margin="8dp"/>
+
+        <Button
+            android:id="@+id/btnNO"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/btnYES"
+            android:text="NO"
+            android:background="@color/accent"
+            android:layout_margin="8dp"/>
+
+    </RelativeLayout>
+</LinearLayout>

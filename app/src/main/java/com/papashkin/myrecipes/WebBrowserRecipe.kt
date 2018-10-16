@@ -6,13 +6,13 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Bitmap
-//import android.graphics.Bitmap
+import android.net.ConnectivityManager
+import android.net.NetworkInfo
 import android.os.Build
 import android.os.Bundle
-//import android.os.Handler
 import android.support.annotation.RequiresApi
-//import android.support.v7.app.AppCompatActivity
 import android.view.*
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -27,6 +27,7 @@ class WebBrowserRecipe : Activity() {
     companion object {
         var aTitle = ""
         var anUrl = ""
+        var html_text = ""
 
         @SuppressLint("StaticFieldLeak")
         lateinit var titleView: TextView
@@ -38,26 +39,34 @@ class WebBrowserRecipe : Activity() {
         lateinit var progBar: ProgressBar
     }
 
-    lateinit var mWebView: WebView
-    lateinit var menu: PopupMenu
+    private lateinit var mWebView: WebView
+    private lateinit var menu: PopupMenu
+    private lateinit var appContext: Context
+    private var isConnected: Boolean = false
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_browser)
 
-        anUrl = intent.getStringExtra("URL")
-        aTitle = intent.getStringExtra("NAME")
+        appContext = this.applicationContext
 
-//        titleView = findViewById(R.id.browser_title)
-//        titleView.text = aTitle
-//        urlView = findViewById(R.id.browser_url)
-//        urlView.text = anUrl
+        val recipe = intent.getSerializableExtra("RECIPE") as Recipe
 
         titleView = findViewById(R.id.browser_title)
-        titleView.text = aTitle
+        titleView.text = recipe.name
         urlView = findViewById(R.id.browser_url)
-        urlView.text = anUrl
+        urlView.text = recipe.address
+
+        if (savedInstanceState == null){
+            html_text = recipe.text
+            anUrl = recipe.address
+            aTitle = recipe.name
+        } else {
+            html_text = savedInstanceState.getString("html")
+            anUrl = savedInstanceState.getString("address")
+            aTitle = savedInstanceState.getString("name")
+        }
 
         progBar = findViewById(R.id.browser_progressbar)
 
@@ -65,12 +74,52 @@ class WebBrowserRecipe : Activity() {
         mWebView.settings.javaScriptEnabled = true
         mWebView.webViewClient = MyWebViewClient()
         mWebView.webChromeClient = MyWebChromeClient()
-        mWebView.loadUrl(anUrl)
+
+        isConnected = ifInternetConnection()
+        if (isConnected){
+            mWebView.loadUrl(anUrl)
+        } else {
+            mWebView.settings.builtInZoomControls = true
+            mWebView.settings.setSupportZoom(true)
+            mWebView.settings.useWideViewPort = true
+            mWebView.settings.loadWithOverviewMode = true
+            mWebView.loadDataWithBaseURL(anUrl, html_text, "text/html",
+                    "en_US", null)
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle?) {
+        outState!!.putString("name", aTitle)
+        outState.putString("address", anUrl)
+        outState.putString("html", html_text)
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration?) {
+        if (isConnected){
+            mWebView.loadUrl(anUrl)
+        } else {
+            mWebView.loadDataWithBaseURL(anUrl, html_text, "text/html",
+                    "en_US", null)
+        }
+        super.onConfigurationChanged(newConfig)
+    }
+
+    private fun ifInternetConnection(): Boolean {
+        val connectManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val internet = connectManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).state
+        val wifi = connectManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).state
+
+        return internet == NetworkInfo.State.CONNECTED ||
+                wifi == NetworkInfo.State.CONNECTED
     }
 
     fun showPopupMenu(v: View){
         menu = PopupMenu(this, v)
         menu.inflate(R.menu.menu_browser)
+        if (html_text != "") {
+            menu.menu.findItem(R.id.menu_save_link).isEnabled = false
+        }
         menu.setOnMenuItemClickListener {
             when (it.itemId){
                 R.id.menu_copy_link ->{
@@ -87,7 +136,8 @@ class WebBrowserRecipe : Activity() {
                 }
                 R.id.menu_exit -> {
                     mWebView.destroy()
-                    super.onBackPressed()
+                    onDestroy()
+//                    super.onBackPressed()
                     true
                 }
                 else -> false
@@ -108,8 +158,7 @@ class WebBrowserRecipe : Activity() {
     }
 
     override fun onDestroy() {
-        mWebView.destroy()
-        val intent = Intent(this@WebBrowserRecipe, MainActivity::class.java)
+        val intent = Intent(appContext, MainActivity::class.java)
         startActivity(intent)
 //        finish()
         super.onDestroy()
@@ -137,6 +186,19 @@ class WebBrowserRecipe : Activity() {
     }
 
     private fun saveURL() {
+        if (html_text == "") {
+            val task = Task_getHTMLpage()
+            task.execute(arrayOf(anUrl, appContext))
+            val isReady = task.get()
+            if (isReady){
+                Toast.makeText(appContext, "HTML saved", Toast.LENGTH_SHORT)
+                        .show()
+            }
+        } else {
+            Toast.makeText(
+                    appContext, "this page is already in Database", Toast.LENGTH_SHORT)
+                    .show()
+        }
 
     }
 
@@ -160,7 +222,6 @@ class WebBrowserRecipe : Activity() {
             progBar.visibility = View.VISIBLE
             super.onPageStarted(view, url, favicon)
         }
-
     }
 
     class MyWebChromeClient : WebChromeClient() {

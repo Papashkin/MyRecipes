@@ -24,6 +24,7 @@ class MainActivity : AppCompatActivity() {
     private var isReady = false
     private val paint = Paint()
     val MSG_EDIT = "Insert new recipe name"
+    val MSG_DELETE = "Delete the recipe"
 
     private lateinit var recipeList: ArrayList<Recipe>
 
@@ -34,7 +35,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var rvAdapter: RVAdapter
     private lateinit var progressBar: ProgressBar
     private lateinit var btnAdd: ImageButton
-    private lateinit var mBundle: Bundle
+
+    private var mBundle: Bundle? = null
 
     private lateinit var newTitle: String
 
@@ -69,23 +71,23 @@ class MainActivity : AppCompatActivity() {
         progressBar.visibility = View.INVISIBLE
     }
 
-//    override fun onDestroy() {
-//        super.onDestroy()
-//    }
-
-    override fun onPause() {
-        mBundle = Bundle()
-        mBundle.putSerializable("LIST", recipeList)
-        super.onPause()
+    override fun onStop() {
+        if (mBundle == null) {
+            mBundle = Bundle()
+            mBundle!!.putSerializable("LIST", recipeList)
+        }
+        super.onStop()
     }
 
     override fun onRestart() {
-//        val a = mBundle.getSerializable("LIST")
-        if (!mBundle.isEmpty){
-            recipeList = mBundle.getSerializable("LIST") as ArrayList<Recipe>
+        progressBar.visibility = View.VISIBLE
+        if (mBundle != null){
+            recipeList = mBundle!!.getSerializable("LIST") as ArrayList<Recipe>
             initializationAdapter()
+            mBundle = null
         }
         super.onRestart()
+        progressBar.visibility = View.INVISIBLE
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -161,11 +163,9 @@ class MainActivity : AppCompatActivity() {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val pos = viewHolder.adapterPosition
                 if (direction == ItemTouchHelper.LEFT){
-                    val id = recipeList[pos].id
-                    deleteFromDB(id)
-                    rvAdapter.removeItem(pos)
+                    initDeleteDialog(pos)
                 } else {
-                    initDialog(pos)
+                    initEditDialog(pos)
                 }
             }
 
@@ -206,7 +206,31 @@ class MainActivity : AppCompatActivity() {
         touchHelper.attachToRecyclerView(rvRecipes)
     }
 
-    private fun initDialog(id: Int) {
+    private fun initDeleteDialog(pos: Int) {
+        val dialog = Dialog(this@MainActivity)
+        dialog.setTitle(MSG_DELETE)
+        dialog.setContentView(R.layout.dialog_delete)
+        val textview = dialog.findViewById<TextView>(R.id.et_recipe)
+        textview.text = resources.getString(R.string.text_delete_recipe, recipeList[pos].name)
+        val btnYES = dialog.findViewById<Button>(R.id.btnYES)
+        val btnNO = dialog.findViewById<Button>(R.id.btnNO)
+        btnYES.setOnClickListener {
+            val id = recipeList[pos].id
+            deleteFromDB(id)
+            rvAdapter.removeItem(pos)
+            dialog.dismiss()
+        }
+        btnNO.setOnClickListener {
+            dialog.dismiss()
+        }
+        dialog.setCancelable(true)
+        dialog.setOnDismissListener {
+            rvAdapter.notifyDataSetChanged()
+        }
+        dialog.show()
+    }
+
+    private fun initEditDialog(id: Int) {
         newTitle = ""
         val dialog = Dialog(this@MainActivity)
         dialog.setTitle(MSG_EDIT)
@@ -323,13 +347,11 @@ class MainActivity : AppCompatActivity() {
         }
         val id = ids.indexOf(v.id.toLong())
         val address = recipeList[id].address
-        val title = recipeList[id].name
+//        val title = recipeList[id].name
 
         if (address != "") {
             val intent = Intent(mContext, WebBrowserRecipe::class.java)
-            intent.putExtra("URL", address)
-            intent.putExtra("NAME", title)
-//            finish()
+            intent.putExtra("RECIPE", recipeList[id])
             onPause()
             startActivity(intent)
         } else {

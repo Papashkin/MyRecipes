@@ -1,5 +1,6 @@
 package com.papashkin.myrecipes
 
+import android.app.ApplicationErrorReport
 import android.content.Context
 import android.os.AsyncTask
 import android.util.Log
@@ -103,5 +104,26 @@ class Task_newTitle: AsyncTask<Array<Any>, Void, Boolean>(){
         db.recipeDao().updTitle(title, id)
         db.close()
         return true
+    }
+}
+
+class Task_getHTMLpage: AsyncTask<Array<Any>, Void, Boolean>(){
+    override fun doInBackground(vararg params: Array<Any>): Boolean {
+        val url = params[0][0] as String
+        val appContext = params[0][1] as Context
+        val str = try {
+            val doc = Jsoup.connect(url).get()
+            doc.toString()
+        } catch (ex: Exception){
+            Log.e("[GET REQUEST]", ex.localizedMessage)
+            ""
+        }
+        return if (str != ""){
+            val db = RecipeDatabase.getRecipeDatabase(appContext)
+            val id = db.recipeDao().getIdByAddress(url)
+            db.recipeDao().updText(str, id)
+            db.close()
+            true
+        } else false
     }
 }
