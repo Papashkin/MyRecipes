@@ -26,7 +26,8 @@
         </activity>
 
         <activity
-            android:name=".WebBrowserRecipe">
+            android:name=".WebBrowserRecipe"
+            android:configChanges="orientation|screenSize">
         </activity>
 
     </application>

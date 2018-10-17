@@ -1,6 +1,7 @@
 package com.papashkin.myrecipes
 
 import android.app.Dialog
+import android.app.SearchManager
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
@@ -9,24 +10,26 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.SearchView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import android.widget.*
 import org.jsoup.Jsoup
 import java.lang.Exception
 import android.graphics.RectF
-import android.os.Parcelable
-import android.view.ContextMenu
 import android.view.Menu
 import android.view.MenuItem
 
 class MainActivity : AppCompatActivity() {
     private var isReady = false
     private val paint = Paint()
+    private var mBundle: Bundle? = null
     val MSG_EDIT = "Insert new recipe name"
     val MSG_DELETE = "Delete the recipe"
 
     private lateinit var recipeList: ArrayList<Recipe>
+    private lateinit var newTitle: String
+    private lateinit var fromClipboard: CharSequence
 
     private lateinit var mContext: Context
 
@@ -35,15 +38,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var rvAdapter: RVAdapter
     private lateinit var progressBar: ProgressBar
     private lateinit var btnAdd: ImageButton
-
-    private var mBundle: Bundle? = null
-
-    private lateinit var newTitle: String
+    private lateinit var searcher: SearchView
 
     private lateinit var iconDel: Bitmap
     private lateinit var iconEdit: Bitmap
-
-    private lateinit var fromClipboard: CharSequence
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,6 +91,23 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         val inflater = menuInflater
         inflater.inflate(R.menu.menu_main, menu)
+        val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
+        searcher = menu!!.findItem(R.id.menu_main_search)
+                .actionView as SearchView
+        searcher.setSearchableInfo(searchManager.getSearchableInfo(componentName))
+        searcher.maxWidth = Integer.MAX_VALUE
+
+        searcher.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                rvAdapter.filter.filter(query!!)
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                rvAdapter.filter.filter(newText!!)
+                return false
+            }
+        })
         return true
     }
 
@@ -152,115 +167,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initSwipe() {
-        val dragFlag = 0
-        val swipeFlag = ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
-        val simpleCallback = object : ItemTouchHelper.SimpleCallback(dragFlag,swipeFlag) {
-
-            override fun onMove(p0: RecyclerView, p1: RecyclerView.ViewHolder, p2: RecyclerView.ViewHolder): Boolean {
-                return false
-            }
-
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                val pos = viewHolder.adapterPosition
-                if (direction == ItemTouchHelper.LEFT){
-                    initDeleteDialog(pos)
-                } else {
-                    initEditDialog(pos)
-                }
-            }
-
-            override fun onChildDraw(c: Canvas, recyclerView: RecyclerView,
-                                     viewHolder: RecyclerView.ViewHolder, dX: Float, dY: Float,
-                                     actionState: Int, isCurrentlyActive: Boolean) {
-                iconDel = BitmapFactory.decodeResource(
-                        mContext.resources, R.drawable.ic_delete_white_36dp)
-                iconEdit = BitmapFactory.decodeResource(
-                        mContext.resources, R.drawable.ic_mode_edit_white_36dp)
-
-                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE){
-                    val itemView = viewHolder.itemView
-                    val height = (itemView.bottom - itemView.top).toFloat()
-                    val width = height/3
-
-                    if (dX > 0) {
-                        paint.color = Color.parseColor("#388E3C")
-                        val background = RectF(itemView.left.toFloat(), itemView.top.toFloat(), dX, itemView.bottom.toFloat())
-                        c.drawRect(background, paint)
-
-                        val icon_dest = RectF(itemView.left + width , itemView.top + width, itemView.left + 2*width, itemView.bottom - width)
-                        c.drawBitmap(iconEdit, null, icon_dest, paint)
-                    } else {
-                        paint.color = Color.parseColor("#C62828")
-                        val background = RectF(itemView.right + dX, itemView.top.toFloat(), itemView.right.toFloat(), itemView.bottom.toFloat())
-                        c.drawRect(background, paint)
-
-                        val icon_dest = RectF(itemView.right - 2*width , itemView.top + width, itemView.right - width, itemView.bottom - width)
-                        c.drawBitmap(iconDel, null, icon_dest, paint)
-                    }
-                }
-                super.onChildDraw(c, recyclerView, viewHolder, dX, dY,
-                        actionState, isCurrentlyActive)
-            }
-        }
-        val touchHelper = ItemTouchHelper(simpleCallback)
+        val touchHelper = ItemTouchHelper(recipeCallback)
         touchHelper.attachToRecyclerView(rvRecipes)
-    }
-
-    private fun initDeleteDialog(pos: Int) {
-        val dialog = Dialog(this@MainActivity)
-        dialog.setTitle(MSG_DELETE)
-        dialog.setContentView(R.layout.dialog_delete)
-        val textview = dialog.findViewById<TextView>(R.id.et_recipe)
-        textview.text = resources.getString(R.string.text_delete_recipe, recipeList[pos].name)
-        val btnYES = dialog.findViewById<Button>(R.id.btnYES)
-        val btnNO = dialog.findViewById<Button>(R.id.btnNO)
-        btnYES.setOnClickListener {
-            val id = recipeList[pos].id
-            deleteFromDB(id)
-            rvAdapter.removeItem(pos)
-            dialog.dismiss()
-        }
-        btnNO.setOnClickListener {
-            dialog.dismiss()
-        }
-        dialog.setCancelable(true)
-        dialog.setOnDismissListener {
-            rvAdapter.notifyDataSetChanged()
-        }
-        dialog.show()
-    }
-
-    private fun initEditDialog(id: Int) {
-        newTitle = ""
-        val dialog = Dialog(this@MainActivity)
-        dialog.setTitle(MSG_EDIT)
-        dialog.setContentView(R.layout.dialog_newtitle)
-        val et = dialog.findViewById<EditText>(R.id.et_recipe)
-        et.setText(recipeList[id].name, TextView.BufferType.EDITABLE)
-        val btnSET = dialog.findViewById<Button>(R.id.btnOK)
-        btnSET.setOnClickListener {
-            newTitle = et.text.toString()
-                    if (newTitle == "") {
-                        Toast.makeText(mContext, "incorrect name", Toast.LENGTH_SHORT)
-                                .show()
-                    } else {
-                        val taskUpdater = Task_newTitle()
-                        taskUpdater.execute(arrayOf(newTitle, recipeList[id].id, mContext))
-                        val isOk = taskUpdater.get()
-                        rvAdapter.changeTitle(newTitle, id)
-                        dialog.dismiss()
-                    }
-        }
-        val btnCANCEL = dialog.findViewById<Button>(R.id.btnCANCEL)
-        btnCANCEL.setOnClickListener {
-            rvAdapter.notifyDataSetChanged()
-            dialog.dismiss()
-        }
-        dialog.setCancelable(true)
-        dialog.setOnDismissListener {
-            rvAdapter.notifyDataSetChanged()
-        }
-        dialog.show()
     }
 
     /** @deleteFromDB allows delete one selected record from DB
@@ -347,7 +255,6 @@ class MainActivity : AppCompatActivity() {
         }
         val id = ids.indexOf(v.id.toLong())
         val address = recipeList[id].address
-//        val title = recipeList[id].name
 
         if (address != "") {
             val intent = Intent(mContext, WebBrowserRecipe::class.java)
@@ -358,5 +265,109 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(mContext, "page URL is absent \n Page loading failed", Toast.LENGTH_SHORT)
                     .show()
         }
+    }
+
+    private val recipeCallback = object : ItemTouchHelper.SimpleCallback(
+            0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+
+        override fun onMove(p0: RecyclerView, p1: RecyclerView.ViewHolder, p2: RecyclerView.ViewHolder): Boolean {
+            return false
+        }
+
+        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+            val pos = viewHolder.adapterPosition
+            if (direction == ItemTouchHelper.LEFT){
+                initDeleteDialog(pos)
+            } else {
+                initEditDialog(pos)
+            }
+        }
+
+        override fun onChildDraw(c: Canvas, recyclerView: RecyclerView,
+                                 viewHolder: RecyclerView.ViewHolder, dX: Float, dY: Float,
+                                 actionState: Int, isCurrentlyActive: Boolean) {
+            iconDel = BitmapFactory.decodeResource(mContext.resources, R.drawable.ic_delete_white_36dp)
+            iconEdit = BitmapFactory.decodeResource(mContext.resources, R.drawable.ic_mode_edit_white_36dp)
+
+            if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE){
+                val itemView = viewHolder.itemView
+                val height = (itemView.bottom - itemView.top).toFloat()
+                val width = height/3
+
+                if (dX > 0) {
+                    paint.color = Color.parseColor("#388E3C")
+                    val background = RectF(itemView.left.toFloat(), itemView.top.toFloat(), dX, itemView.bottom.toFloat())
+                    c.drawRect(background, paint)
+
+                    val icon_dest = RectF(itemView.left + width , itemView.top + width, itemView.left + 2*width, itemView.bottom - width)
+                    c.drawBitmap(iconEdit, null, icon_dest, paint)
+                } else {
+                    paint.color = Color.parseColor("#C62828")
+                    val background = RectF(itemView.right + dX, itemView.top.toFloat(), itemView.right.toFloat(), itemView.bottom.toFloat())
+                    c.drawRect(background, paint)
+
+                    val icon_dest = RectF(itemView.right - 2*width , itemView.top + width, itemView.right - width, itemView.bottom - width)
+                    c.drawBitmap(iconDel, null, icon_dest, paint)
+                }
+            }
+            super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+        }
+    }
+
+    private fun initDeleteDialog(pos: Int) {
+        val dialog = Dialog(this@MainActivity)
+        dialog.setTitle(MSG_DELETE)
+        dialog.setContentView(R.layout.dialog_delete)
+        val textview = dialog.findViewById<TextView>(R.id.et_recipe)
+        textview.text = resources.getString(R.string.text_delete_recipe, recipeList[pos].name)
+        val btnYES = dialog.findViewById<Button>(R.id.btnYES)
+        val btnNO = dialog.findViewById<Button>(R.id.btnNO)
+        btnYES.setOnClickListener {
+            val id = recipeList[pos].id
+            deleteFromDB(id)
+            rvAdapter.removeItem(pos)
+            dialog.dismiss()
+        }
+        btnNO.setOnClickListener {
+            dialog.dismiss()
+        }
+        dialog.setCancelable(true)
+        dialog.setOnDismissListener {
+            rvAdapter.notifyDataSetChanged()
+        }
+        dialog.show()
+    }
+
+    private fun initEditDialog(id: Int) {
+        newTitle = ""
+        val dialog = Dialog(this@MainActivity)
+        dialog.setTitle(MSG_EDIT)
+        dialog.setContentView(R.layout.dialog_newtitle)
+        val et = dialog.findViewById<EditText>(R.id.et_recipe)
+        et.setText(recipeList[id].name, TextView.BufferType.EDITABLE)
+        val btnSET = dialog.findViewById<Button>(R.id.btnOK)
+        btnSET.setOnClickListener {
+            newTitle = et.text.toString()
+            if (newTitle == "") {
+                Toast.makeText(mContext, "incorrect name", Toast.LENGTH_SHORT)
+                        .show()
+            } else {
+                val taskUpdater = Task_newTitle()
+                taskUpdater.execute(arrayOf(newTitle, recipeList[id].id, mContext))
+                val isOk = taskUpdater.get()
+                rvAdapter.changeTitle(newTitle, id)
+                dialog.dismiss()
+            }
+        }
+        val btnCANCEL = dialog.findViewById<Button>(R.id.btnCANCEL)
+        btnCANCEL.setOnClickListener {
+            //            rvAdapter.notifyDataSetChanged()
+            dialog.dismiss()
+        }
+        dialog.setCancelable(true)
+        dialog.setOnDismissListener {
+            rvAdapter.notifyDataSetChanged()
+        }
+        dialog.show()
     }
 }

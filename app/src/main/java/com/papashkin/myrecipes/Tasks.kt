@@ -1,6 +1,5 @@
 package com.papashkin.myrecipes
 
-import android.app.ApplicationErrorReport
 import android.content.Context
 import android.os.AsyncTask
 import android.util.Log

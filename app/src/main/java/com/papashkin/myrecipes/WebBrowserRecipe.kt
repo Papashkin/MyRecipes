@@ -18,16 +18,13 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.PopupMenu
-import android.widget.ProgressBar
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 
 class WebBrowserRecipe : Activity() {
     companion object {
         var aTitle = ""
         var anUrl = ""
-        var html_text = ""
+        var htmlText = ""
 
         @SuppressLint("StaticFieldLeak")
         lateinit var titleView: TextView
@@ -40,9 +37,9 @@ class WebBrowserRecipe : Activity() {
     }
 
     private lateinit var mWebView: WebView
+    private lateinit var btnMenu: ImageView
     private lateinit var menu: PopupMenu
     private lateinit var appContext: Context
-    private var isConnected: Boolean = false
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,57 +48,32 @@ class WebBrowserRecipe : Activity() {
 
         appContext = this.applicationContext
 
+        setActivityItems()
+
         val recipe = intent.getSerializableExtra("RECIPE") as Recipe
+        htmlText = recipe.text
+        anUrl = recipe.address
+        aTitle = recipe.name
 
-        titleView = findViewById(R.id.browser_title)
-        titleView.text = recipe.name
-        urlView = findViewById(R.id.browser_url)
-        urlView.text = recipe.address
+        titleView.text = aTitle
+        urlView.text = anUrl
 
-        if (savedInstanceState == null){
-            html_text = recipe.text
-            anUrl = recipe.address
-            aTitle = recipe.name
-        } else {
-            html_text = savedInstanceState.getString("html")
-            anUrl = savedInstanceState.getString("address")
-            aTitle = savedInstanceState.getString("name")
-        }
-
-        progBar = findViewById(R.id.browser_progressbar)
-
-        mWebView = findViewById(R.id.recipeView)
-        mWebView.settings.javaScriptEnabled = true
-        mWebView.webViewClient = MyWebViewClient()
-        mWebView.webChromeClient = MyWebChromeClient()
-
-        isConnected = ifInternetConnection()
-        if (isConnected){
+        if (ifInternetConnection()){
+            mWebView.settings.javaScriptEnabled = true
             mWebView.loadUrl(anUrl)
         } else {
-            mWebView.settings.builtInZoomControls = true
-            mWebView.settings.setSupportZoom(true)
-            mWebView.settings.useWideViewPort = true
-            mWebView.settings.loadWithOverviewMode = true
-            mWebView.loadDataWithBaseURL(anUrl, html_text, "text/html",
-                    "en_US", null)
+            if (htmlText != ""){
+                setWebViewSettings()
+                mWebView.loadDataWithBaseURL(anUrl, htmlText, "text/html",
+                        "en_US", null)
+            } else {
+                val htmlNoConnection = "<html><head><title>Connection failed</title></head><body>Connection failed. Please check the Internet Connection.</body></html>"
+                mWebView.loadData(htmlNoConnection, "text/html", "en_US")
+            }
         }
-    }
-
-    override fun onSaveInstanceState(outState: Bundle?) {
-        outState!!.putString("name", aTitle)
-        outState.putString("address", anUrl)
-        outState.putString("html", html_text)
-        super.onSaveInstanceState(outState)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration?) {
-        if (isConnected){
-            mWebView.loadUrl(anUrl)
-        } else {
-            mWebView.loadDataWithBaseURL(anUrl, html_text, "text/html",
-                    "en_US", null)
-        }
         super.onConfigurationChanged(newConfig)
     }
 
@@ -114,10 +86,30 @@ class WebBrowserRecipe : Activity() {
                 wifi == NetworkInfo.State.CONNECTED
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun setWebViewSettings(){
+        mWebView.settings.javaScriptEnabled = true
+        mWebView.settings.builtInZoomControls = true
+        mWebView.settings.setSupportZoom(true)
+        mWebView.settings.useWideViewPort = true
+        mWebView.settings.loadWithOverviewMode = true
+    }
+
+    private fun setActivityItems(){
+        progBar = findViewById(R.id.browser_progressbar)
+        btnMenu = findViewById(R.id.browser_menu)
+        titleView = findViewById(R.id.browser_title)
+        urlView = findViewById(R.id.browser_url)
+
+        mWebView = findViewById(R.id.recipeView)
+        mWebView.webViewClient = MyWebViewClient()
+        mWebView.webChromeClient = MyWebChromeClient()
+    }
+
     fun showPopupMenu(v: View){
         menu = PopupMenu(this, v)
         menu.inflate(R.menu.menu_browser)
-        if (html_text != "") {
+        if (htmlText != "") {
             menu.menu.findItem(R.id.menu_save_link).isEnabled = false
         }
         menu.setOnMenuItemClickListener {
@@ -135,9 +127,7 @@ class WebBrowserRecipe : Activity() {
                     true
                 }
                 R.id.menu_exit -> {
-                    mWebView.destroy()
                     onDestroy()
-//                    super.onBackPressed()
                     true
                 }
                 else -> false
@@ -158,6 +148,7 @@ class WebBrowserRecipe : Activity() {
     }
 
     override fun onDestroy() {
+        mWebView.destroy()
         val intent = Intent(appContext, MainActivity::class.java)
         startActivity(intent)
 //        finish()
@@ -186,7 +177,7 @@ class WebBrowserRecipe : Activity() {
     }
 
     private fun saveURL() {
-        if (html_text == "") {
+        if (htmlText == "") {
             val task = Task_getHTMLpage()
             task.execute(arrayOf(anUrl, appContext))
             val isReady = task.get()
@@ -196,10 +187,9 @@ class WebBrowserRecipe : Activity() {
             }
         } else {
             Toast.makeText(
-                    appContext, "this page is already in Database", Toast.LENGTH_SHORT)
+                    appContext, "This page is already in Database", Toast.LENGTH_SHORT)
                     .show()
         }
-
     }
 
     private class MyWebViewClient : WebViewClient(){

@@ -13,6 +13,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -20,8 +22,10 @@ import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
-public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder> {
+public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder>
+        implements Filterable {
     private ArrayList<Recipe> recipeList;
+    private ArrayList<Recipe> recipeListFiltered;
     private static Context appContext;
 
     private int scrHeight;
@@ -29,6 +33,7 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder> {
 
     RVAdapter(ArrayList<Recipe> recipes){
         recipeList = recipes;
+        recipeListFiltered = recipes;
     }
 
     private void checkScrSize() {
@@ -113,5 +118,40 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder> {
             img = itemView.findViewById(R.id.recipe_photo);
             editText = itemView.findViewById(R.id.recipe_changetext);
         }
+    }
+
+    @Override
+    public Filter getFilter(){
+        return new Filter() {
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                String charString = constraint.toString();
+                if (charString.isEmpty()) {
+                    recipeListFiltered = recipeList;
+                } else {
+                    ArrayList<Recipe> filteredList = new ArrayList<>();
+                    for (Recipe row : recipeList) {
+
+                        // name match condition. this might differ depending on your requirement
+                        // here we are looking for name or phone number match
+                        if (row.getName().toLowerCase().contains(charString.toLowerCase())) {
+                            filteredList.add(row);
+                        }
+                    }
+                    recipeListFiltered = filteredList;
+                }
+
+                FilterResults filterResults = new FilterResults();
+                filterResults.values = recipeListFiltered;
+                return filterResults;
+//                return null;
+            }
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                recipeListFiltered = (ArrayList<Recipe>) results.values;
+                notifyDataSetChanged();
+            }
+        };
     }
 }
