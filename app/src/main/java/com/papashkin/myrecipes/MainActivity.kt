@@ -92,20 +92,19 @@ class MainActivity : AppCompatActivity() {
         val inflater = menuInflater
         inflater.inflate(R.menu.menu_main, menu)
         val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
-        searcher = menu!!.findItem(R.id.menu_main_search)
-                .actionView as SearchView
+        searcher = menu!!.findItem(R.id.menu_main_search).actionView as SearchView
         searcher.setSearchableInfo(searchManager.getSearchableInfo(componentName))
         searcher.maxWidth = Integer.MAX_VALUE
 
         searcher.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 rvAdapter.filter.filter(query!!)
-                return false
+                return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
                 rvAdapter.filter.filter(newText!!)
-                return false
+                return true
             }
         })
         return true

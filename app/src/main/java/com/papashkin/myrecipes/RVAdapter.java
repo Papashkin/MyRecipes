@@ -25,7 +25,7 @@ import java.util.ArrayList;
 public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder>
         implements Filterable {
     private ArrayList<Recipe> recipeList;
-    private ArrayList<Recipe> recipeListFiltered;
+    private ArrayList<Recipe> recipeListCopy;
     private static Context appContext;
 
     private int scrHeight;
@@ -33,7 +33,7 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder>
 
     RVAdapter(ArrayList<Recipe> recipes){
         recipeList = recipes;
-        recipeListFiltered = recipes;
+        recipeListCopy = recipes;
     }
 
     private void checkScrSize() {
@@ -82,11 +82,13 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder>
 
     public void addItem(Recipe recipe) {
         recipeList.add(recipe);
+        recipeListCopy.add(recipe);
         notifyItemInserted(recipeList.size());
     }
 
     public void removeItem(int position) {
         recipeList.remove(position);
+        recipeListCopy.remove(position);
         notifyItemRemoved(position);
         notifyItemRangeChanged(position, recipeList.size());
     }
@@ -125,31 +127,26 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder>
         return new Filter() {
             @Override
             protected FilterResults performFiltering(CharSequence constraint) {
-                String charString = constraint.toString();
+                String charString = constraint.toString().toLowerCase();
                 if (charString.isEmpty()) {
-                    recipeListFiltered = recipeList;
+                    recipeList = recipeListCopy;
                 } else {
                     ArrayList<Recipe> filteredList = new ArrayList<>();
-                    for (Recipe row : recipeList) {
-
-                        // name match condition. this might differ depending on your requirement
-                        // here we are looking for name or phone number match
-                        if (row.getName().toLowerCase().contains(charString.toLowerCase())) {
+                    for (Recipe row : recipeListCopy) {
+                        if (row.getName().toLowerCase().contains(charString)) {
                             filteredList.add(row);
                         }
                     }
-                    recipeListFiltered = filteredList;
+                    recipeList = filteredList;
                 }
-
                 FilterResults filterResults = new FilterResults();
-                filterResults.values = recipeListFiltered;
+                filterResults.values = recipeList;
                 return filterResults;
-//                return null;
             }
 
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
-                recipeListFiltered = (ArrayList<Recipe>) results.values;
+                recipeList = (ArrayList<Recipe>) results.values;
                 notifyDataSetChanged();
             }
         };

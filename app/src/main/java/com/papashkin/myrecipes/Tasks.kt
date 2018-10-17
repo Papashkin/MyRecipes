@@ -75,23 +75,23 @@ class Task_getImageUrl:AsyncTask<String, Void, String>(){
     }
 }
 
-class Task_checkEmptyRecords: AsyncTask<Context, Void, Boolean>(){
-    override fun doInBackground(vararg params: Context): Boolean {
-        val isReady = false
-        val context = params[0]
-        val db = RecipeDatabase.getRecipeDatabase(context)
-        val recipes = db.recipeDao().all
-        for (i in recipes.indices){
-            val name = recipes[i].name
-            val address = recipes[i].address
-            if (name.isEmpty() || address.isEmpty()){
-                db.recipeDao().delete(recipes[i])
-            }
-        }
-        db.close()
-        return !isReady
-    }
-}
+//class Task_checkEmptyRecords: AsyncTask<Context, Void, Boolean>(){
+//    override fun doInBackground(vararg params: Context): Boolean {
+//        val isReady = false
+//        val context = params[0]
+//        val db = RecipeDatabase.getRecipeDatabase(context)
+//        val recipes = db.recipeDao().all
+//        for (i in recipes.indices){
+//            val name = recipes[i].name
+//            val address = recipes[i].address
+//            if (name.isEmpty() || address.isEmpty()){
+//                db.recipeDao().delete(recipes[i])
+//            }
+//        }
+//        db.close()
+//        return !isReady
+//    }
+//}
 
 
 class Task_newTitle: AsyncTask<Array<Any>, Void, Boolean>(){
