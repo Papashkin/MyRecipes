@@ -18,9 +18,10 @@
 
             <ImageView
                 android:id="@+id/recipe_photo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="110dp"
+                android:layout_height="100dp"
                 android:layout_alignParentStart="true"
+                android:scaleType="fitCenter"
                 android:layout_marginEnd="8dp"/>
 
             <Space
@@ -39,20 +40,6 @@
                 android:textColor="@color/secondary_text"
                 android:maxLines="2"
                 android:ellipsize="end" />
-
-            <EditText
-                android:id="@+id/recipe_changetext"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_toEndOf="@id/space"
-                android:layout_alignParentTop="true"
-                android:textSize="20sp"
-                android:textColor="@color/secondary_text"
-                android:inputType="text"
-                android:visibility="invisible"
-                android:maxLines="2"
-                android:ellipsize="end" />
-
         </RelativeLayout>
 
         <View

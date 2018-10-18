@@ -12,7 +12,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.EditText;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.ImageView;
@@ -28,8 +27,8 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder>
     private ArrayList<Recipe> recipeListCopy;
     private static Context appContext;
 
-    private int scrHeight;
-    private int scrWidth;
+//    private int scrHeight;
+//    private int scrWidth;
 
     RVAdapter(ArrayList<Recipe> recipes){
         recipeList = recipes;
@@ -44,11 +43,11 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder>
         int orient = Resources.getSystem().getConfiguration().orientation;
         display.getSize(size);
         if (orient == Configuration.ORIENTATION_PORTRAIT){
-            scrWidth = size.x;
-            scrHeight = size.y;
+//            scrWidth = size.x;
+//            scrHeight = size.y;
         } else if (orient == Configuration.ORIENTATION_LANDSCAPE){
-            scrWidth = size.y;
-            scrHeight = size.x;
+//            scrWidth = size.y;
+//            scrHeight = size.x;
         }
     }
 
@@ -59,19 +58,21 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder>
         checkScrSize();
         View v = LayoutInflater.from(viewGroup.getContext()).
                 inflate(R.layout.cardview_recipe, viewGroup, false);
-        PlaceViewHolder pvh = new PlaceViewHolder(v);
-        return pvh;
+//        PlaceViewHolder pvh = new PlaceViewHolder(v);
+//        return pvh;
+        return new PlaceViewHolder(v);
     }
 
     @Override
     public void onBindViewHolder(@NonNull PlaceViewHolder placeViewHolder, int i) {
-        final int index = i;
+//        final int index = i;
         placeViewHolder.title.setText(recipeList.get(i).getName());
         placeViewHolder.itemView.setId(recipeList.get(i).getId().intValue());
         Picasso.with(appContext)
                 .load(recipeList.get(i).getImageUrl())
-                .resize(scrWidth/4,scrHeight/8)
                 .placeholder(R.drawable.drawable_placeholder)
+                .error(R.drawable.food_2_64dp)
+                .fit()
                 .into(placeViewHolder.img);
     }
 
@@ -95,6 +96,7 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder>
 
     public void changeTitle(String newTitle, int pos){
         recipeList.get(pos).setName(newTitle);
+        recipeListCopy.get(pos).setName(newTitle);
         notifyDataSetChanged();
     }
 
@@ -111,14 +113,12 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder>
         CardView cv;
         TextView title;
         ImageView img;
-        EditText editText;
 
         PlaceViewHolder(View itemView){
             super(itemView);
             cv = itemView.findViewById(R.id.cardview_recipe);
             title = itemView.findViewById(R.id.recipe_title);
             img = itemView.findViewById(R.id.recipe_photo);
-            editText = itemView.findViewById(R.id.recipe_changetext);
         }
     }
 
