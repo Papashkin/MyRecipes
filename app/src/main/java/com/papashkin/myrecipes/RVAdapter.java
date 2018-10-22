@@ -1,8 +1,6 @@
 package com.papashkin.myrecipes;
 
 import android.content.Context;
-import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.graphics.Point;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.CardView;
@@ -27,9 +25,6 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder>
     private ArrayList<Recipe> recipeListCopy;
     private static Context appContext;
 
-//    private int scrHeight;
-//    private int scrWidth;
-
     RVAdapter(ArrayList<Recipe> recipes){
         recipeList = recipes;
         recipeListCopy = recipes;
@@ -40,15 +35,7 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder>
         assert wm != null;
         Display display = wm.getDefaultDisplay();
         Point size = new Point();
-        int orient = Resources.getSystem().getConfiguration().orientation;
         display.getSize(size);
-        if (orient == Configuration.ORIENTATION_PORTRAIT){
-//            scrWidth = size.x;
-//            scrHeight = size.y;
-        } else if (orient == Configuration.ORIENTATION_LANDSCAPE){
-//            scrWidth = size.y;
-//            scrHeight = size.x;
-        }
     }
 
     @NonNull
@@ -58,19 +45,16 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PlaceViewHolder>
         checkScrSize();
         View v = LayoutInflater.from(viewGroup.getContext()).
                 inflate(R.layout.cardview_recipe, viewGroup, false);
-//        PlaceViewHolder pvh = new PlaceViewHolder(v);
-//        return pvh;
         return new PlaceViewHolder(v);
     }
 
     @Override
     public void onBindViewHolder(@NonNull PlaceViewHolder placeViewHolder, int i) {
-//        final int index = i;
         placeViewHolder.title.setText(recipeList.get(i).getName());
         placeViewHolder.itemView.setId(recipeList.get(i).getId().intValue());
         Picasso.with(appContext)
                 .load(recipeList.get(i).getImageUrl())
-                .placeholder(R.drawable.drawable_placeholder)
+                .placeholder(R.drawable.food_2_64dp)
                 .error(R.drawable.food_2_64dp)
                 .fit()
                 .into(placeViewHolder.img);

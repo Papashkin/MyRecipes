@@ -298,15 +298,15 @@ class MainActivity : AppCompatActivity() {
                     val background = RectF(itemView.left.toFloat(), itemView.top.toFloat(), dX, itemView.bottom.toFloat())
                     c.drawRect(background, paint)
 
-                    val icon_dest = RectF(itemView.left + width , itemView.top + width, itemView.left + 2*width, itemView.bottom - width)
-                    c.drawBitmap(iconEdit, null, icon_dest, paint)
+                    val iconDest = RectF(itemView.left + width , itemView.top + width, itemView.left + 2*width, itemView.bottom - width)
+                    c.drawBitmap(iconEdit, null, iconDest, paint)
                 } else {
                     paint.color = Color.parseColor("#C62828")
                     val background = RectF(itemView.right + dX, itemView.top.toFloat(), itemView.right.toFloat(), itemView.bottom.toFloat())
                     c.drawRect(background, paint)
 
-                    val icon_dest = RectF(itemView.right - 2*width , itemView.top + width, itemView.right - width, itemView.bottom - width)
-                    c.drawBitmap(iconDel, null, icon_dest, paint)
+                    val iconDest = RectF(itemView.right - 2*width , itemView.top + width, itemView.right - width, itemView.bottom - width)
+                    c.drawBitmap(iconDel, null, iconDest, paint)
                 }
             }
             super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
@@ -317,8 +317,8 @@ class MainActivity : AppCompatActivity() {
         val dialog = Dialog(this@MainActivity)
         dialog.setTitle(MSG_DELETE)
         dialog.setContentView(R.layout.dialog_delete)
-        val textview = dialog.findViewById<TextView>(R.id.et_recipe)
-        textview.text = resources.getString(R.string.text_delete_recipe, recipeList[pos].name)
+        val textEditor = dialog.findViewById<TextView>(R.id.et_recipe)
+        textEditor.text = resources.getString(R.string.text_delete_recipe, recipeList[pos].name)
         val btnYES = dialog.findViewById<Button>(R.id.btnYES)
         val btnNO = dialog.findViewById<Button>(R.id.btnNO)
         btnYES.setOnClickListener {
@@ -353,7 +353,7 @@ class MainActivity : AppCompatActivity() {
             } else {
                 val taskUpdater = Task_newTitle()
                 taskUpdater.execute(arrayOf(newTitle, recipeList[id].id, mContext))
-                val isOk = taskUpdater.get()
+//                val isOk = taskUpdater.get()
                 rvAdapter.changeTitle(newTitle, id)
                 dialog.dismiss()
             }
